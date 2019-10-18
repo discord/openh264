@@ -1,0 +1,7 @@
+EXPORTS
+WelsCreateDecoder
+WelsCreateSVCEncoder
+WelsDestroyDecoder
+WelsDestroySVCEncoder
+WelsGetCodecVersion
+WelsGetCodecVersionEx

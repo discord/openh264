@@ -7,7 +7,7 @@ vpath %.S $(SRC_PATH)
 vpath %.rc $(SRC_PATH)
 vpath %.pc.in $(SRC_PATH)
 
-OS=$(shell uname | tr A-Z a-z | tr -d \\-[:digit:]. | sed -E 's/^(net|open|free)bsd/bsd/')
+OS=$(shell uname | tr A-Z a-z | tr -d \\-0-9. | sed -E 's/^(net|open|free)bsd/bsd/')
 ARCH=$(shell uname -m)
 LIBPREFIX=lib
 LIBSUFFIX=a
@@ -32,9 +32,10 @@ MODULE_NAME=gmpopenh264
 GMP_API_BRANCH=Firefox39
 CCASFLAGS=$(CFLAGS)
 STATIC_LDFLAGS=-lstdc++
+STRIP ?= strip
 
 SHAREDLIB_MAJORVERSION=4
-FULL_VERSION := 1.7.0
+FULL_VERSION := 1.8.0
 
 ifeq (,$(wildcard $(SRC_PATH)gmp-api))
 HAVE_GMP_API=No
@@ -174,7 +175,7 @@ gmp-bootstrap:
 	cd gmp-api && git fetch origin && git checkout $(GMP_API_BRANCH)
 
 gtest-bootstrap:
-	git clone https://github.com/google/googletest.git gtest
+	if [ ! -d gtest ] ; then git clone https://github.com/google/googletest.git gtest ; fi
 
 ifeq ($(HAVE_GTEST),Yes)
 
@@ -230,7 +231,7 @@ $(LIBPREFIX)$(PROJECT_NAME).$(LIBSUFFIX): $(ENCODER_OBJS) $(DECODER_OBJS) $(PROC
 	$(QUIET_AR)$(AR) $(AR_OPTS) $+
 ifeq (True, $(PROCESS_FILES))
 	cp $@ $(LIBPREFIX)$(PROJECT_NAME)$(DEBUGSYMBOLS_TAG).$(LIBSUFFIX)
-	strip $(STRIP_FLAGS) $@ -o $@
+	$(STRIP) $(STRIP_FLAGS) $@ -o $@
 endif
 
 $(LIBPREFIX)$(PROJECT_NAME).$(SHAREDLIBSUFFIXFULLVER): $(ENCODER_OBJS) $(DECODER_OBJS) $(PROCESSING_OBJS) $(COMMON_OBJS)
@@ -238,7 +239,7 @@ $(LIBPREFIX)$(PROJECT_NAME).$(SHAREDLIBSUFFIXFULLVER): $(ENCODER_OBJS) $(DECODER
 	$(QUIET_CXX)$(CXX) $(SHARED) $(CXX_LINK_O) $+ $(LDFLAGS) $(SHLDFLAGS)
 ifeq (True, $(PROCESS_FILES))
 	cp $@ $(LIBPREFIX)$(PROJECT_NAME)$(DEBUGSYMBOLS_TAG).$(SHAREDLIBSUFFIXFULLVER)
-	strip $(STRIP_FLAGS) $@ -o $@
+	$(STRIP) $(STRIP_FLAGS) $@ -o $@
 endif
 
 ifneq ($(SHAREDLIBSUFFIXFULLVER),$(SHAREDLIBSUFFIX))
@@ -268,7 +269,7 @@ $(LIBPREFIX)$(MODULE_NAME).$(SHAREDLIBSUFFIXFULLVER): $(MODULE_OBJS) $(ENCODER_O
 	$(QUIET_CXX)$(CXX) $(SHARED) $(CXX_LINK_O) $+ $(LDFLAGS) $(SHLDFLAGS) $(MODULE_LDFLAGS)
 ifeq (True, $(PROCESS_FILES))
 	cp $@ $(LIBPREFIX)$(MODULE_NAME)$(DEBUGSYMBOLS_TAG).$(SHAREDLIBSUFFIXFULLVER)
-	strip $(STRIP_FLAGS) $@ -o $@
+	$(STRIP) $(STRIP_FLAGS) $@ -o $@
 endif
 
 ifneq ($(SHAREDLIBSUFFIXFULLVER),$(SHAREDLIBSUFFIX))
