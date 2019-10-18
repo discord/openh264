@@ -187,8 +187,8 @@ TEST_F (EncoderInterfaceTest, EncoderOptionSetTest) {
 
   iResult = pPtrEnc->GetOption (eOptionId, &iReturn);
   EXPECT_EQ (iResult, static_cast<int> (cmResultSuccess));
-  if (iValue < -1 || iValue == 0)
-    iValue = 1;
+  if (iValue <= -1)
+    iValue = 0;
   EXPECT_EQ (iValue, iReturn);
 
   PrepareOneSrcFrame();
@@ -205,9 +205,10 @@ TEST_F (EncoderInterfaceTest, EncoderOptionSetTest) {
   else {
     EXPECT_EQ (iResult, static_cast<int> (cmResultSuccess));
 
+    fFrameRate = WELS_CLIP3 (fFrameRate, 1, 60);
     iResult = pPtrEnc->GetOption (eOptionId, &fReturn);
     EXPECT_EQ (iResult, static_cast<int> (cmResultSuccess));
-    EXPECT_EQ (WELS_CLIP3 (fFrameRate, 1, 60), fReturn);
+    EXPECT_EQ (fFrameRate, fReturn);
   }
   PrepareOneSrcFrame();
   iResult = pPtrEnc->EncodeFrame (pSrcPic, &sFbi);
@@ -220,7 +221,7 @@ TEST_F (EncoderInterfaceTest, EncoderOptionSetTest) {
   sInfo.iLayer = SPATIAL_LAYER_0;
   iResult = pPtrEnc->SetOption (eOptionId, &sInfo);
   pPtrEnc->GetOption (ENCODER_OPTION_SVC_ENCODE_PARAM_EXT, pParamExt);
-  if (sInfo.iBitrate <= 0)
+  if (sInfo.iBitrate <= 0 || (static_cast<float> (pParamExt->sSpatialLayers[sInfo.iLayer].iSpatialBitrate) <= fFrameRate))
     EXPECT_EQ (iResult, static_cast<int> (cmInitParaError));
   else if (pParamExt->sSpatialLayers[sInfo.iLayer].iSpatialBitrate >
            pParamExt->sSpatialLayers[sInfo.iLayer].iMaxSpatialBitrate) {
@@ -242,7 +243,7 @@ TEST_F (EncoderInterfaceTest, EncoderOptionSetTest) {
   sInfo.iLayer = SPATIAL_LAYER_0;
   iResult = pPtrEnc->SetOption (eOptionId, &sInfo);
   pPtrEnc->GetOption (ENCODER_OPTION_SVC_ENCODE_PARAM_EXT, pParamExt);
-  if (sInfo.iBitrate <= 0 || pParamExt->sSpatialLayers[sInfo.iLayer].iSpatialBitrate <= (int) (fFrameRate + 0.5f))
+  if (sInfo.iBitrate <= 0 || (static_cast<float> (pParamExt->sSpatialLayers[sInfo.iLayer].iSpatialBitrate) <= fFrameRate))
     EXPECT_EQ (iResult, static_cast<int> (cmInitParaError));
   else if (pParamExt->sSpatialLayers[sInfo.iLayer].iSpatialBitrate >
            pParamExt->sSpatialLayers[sInfo.iLayer].iMaxSpatialBitrate) {
@@ -728,8 +729,8 @@ TEST_F (EncoderInterfaceTest, ForceIntraFrameWithTemporal) {
   SEncParamExt sEncParamExt;
   pPtrEnc->GetDefaultParams (&sEncParamExt);
   sEncParamExt.iUsageType = CAMERA_VIDEO_REAL_TIME;
-  sEncParamExt.iPicWidth = MB_SIZE + abs ((rand() * 2) % (MAX_WIDTH - MB_SIZE));
-  sEncParamExt.iPicHeight = MB_SIZE + abs ((rand() * 2) % (MAX_HEIGHT - MB_SIZE));
+  sEncParamExt.iPicWidth = MB_SIZE + abs ((rand() / 2 * 2) % (MAX_WIDTH - MB_SIZE));
+  sEncParamExt.iPicHeight = MB_SIZE + abs ((rand() / 2 * 2) % (MAX_HEIGHT - MB_SIZE));
   sEncParamExt.iTargetBitrate = rand() + 1; //!=0
   // Force a bitrate of at least w*h/50, otherwise we will only get skipped frames
   sEncParamExt.iTargetBitrate = WELS_CLIP3 (sEncParamExt.iTargetBitrate,
