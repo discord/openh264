@@ -1,8 +1,0 @@
-LIBRARY OPENH264-2.2.0-WIN32.DLL
-EXPORTS
-WelsCreateDecoder
-WelsCreateSVCEncoder
-WelsDestroyDecoder
-WelsDestroySVCEncoder
-WelsGetCodecVersion
-WelsGetCodecVersionEx
